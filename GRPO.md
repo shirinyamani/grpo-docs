@@ -46,26 +46,26 @@ Limit the ratio discussed above to be within $[1 - \epsilon, 1 + \epsilon]$ to a
 	- $\text{Ratio}: \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)} = \frac{0.9}{0.5} = 1.8  → \text{Clip}\space1.2$ (upper bound limit 1.2) 
 - **Case 2**: If the new policy is not in favour of a response (lower probability e.g. 0.2), meaning if the response is not beneficial the increase might be incorrect, and the model would be penalized.
 	- $\text{Ratio}: \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)} = \frac{0.2}{0.5} = 0.4  →\text{Clip}\space0.8$ (lower bound limit 0.8)
-###### **Meaning**:
+### **Meaning**:
 - The formula encourages the new model to favour responses that the old model underweighted **if they improve the outcome**.
 - If the old model already favoured a response with a high probability, the new model can still reinforce it **but only within a controlled limit $[1 - \epsilon, 1 + \epsilon]$, $\text{(e.g., }\epsilon = 0.2, \space \text{so} \space [0.8-1.2])$**.
 - If the old model overestimated a response that performs poorly, the new model is **discouraged** from maintaining that high probability.
 - Therefore, intuitively, By incorporating the probability ratio, the objective function ensures that updates to the policy are proportional to the advantage $A_i$ while being moderated to prevent drastic changes. T
 
-#### **3. KL Divergence:**  $\beta D_{KL}(\pi_{\theta} || \pi_{ref})$
+## **3. KL Divergence:**  $\beta D_{KL}(\pi_{\theta} || \pi_{ref})$
 KL Divergence is used to prevent over-optimization of the reward model, which in this context is refers to when the model output non-sensical text or in our math reasoning example, the model will generate extremely incorrect answers!
-##### **Example**
+### **Example**
 Suppose the reward model has a flaw—it **wrongly assigns higher rewards to incorrect outputs** due to spurious correlations in the training data. So,  $2 + 2 \times 6 = 20$ then later the Ratio $R(o_6​=20)=0.95$ *(wrong but rewarded highly)*, without KL Divergence, during optimization, the model will learn to favours responses that are higher numbers, assuming they indicate *"more confident"* reasoning, i.e. the model starts shifting its policy towards these outputs. And future iterations reinforce these incorrect answers. So, say  $2 + 2 \times 6 = 42 \space \text{(a random common number in datasets)}$. This response doesn't even resemble arithmetic errors anymore. Instead, the model has learned to exploit whatever patterns maximize the reward signal, regardless of correctness. 
-##### **Meaning**
+### **Meaning**
 - A KL divergence penalty keeps the model’s outputs close to its original distribution, preventing extreme shifts.
 - Even if incorrect answers receive high rewards, the model cannot deviate too much from what it originally considered reasonable.
 - Instead of drifting towards completely irrational outputs, the model would refine its understanding while still allowing some exploration
 -  The 
-##### **Math Definition**
+### **Math Definition**
 Recall that KL distance is defined as follows:
 $$D_{KL}(P || Q) = \sum_{x \in X} P(x) \log \frac{P(x)}{Q(x)}$$
 In RLHF, the two distributions of interest are often the distribution of the new model version, P(x), and a distribution of the reference policy, Q(x).
-##### **Term** $\beta \space$ in $\beta D_{KL}(\pi_{\theta} || \pi_{ref})$
+### **Term** $\beta \space$ in $\beta D_{KL}(\pi_{\theta} || \pi_{ref})$
 -  **Higher $\beta$ (Stronger KL Penalty)**
     - More constraint on policy updates. The model remains close to its reference distribution.
     - Can slow down adaptation: The model may struggle to explore better responses.
@@ -76,23 +76,21 @@ In RLHF, the two distributions of interest are often the distribution of the new
 - **Original** [DeepSeekMath](https://arxiv.org/abs/2402.03300) paper set this $\beta= 0.04$
 
 # Complete Simple Math Example
-#### **Question** 
+## **Question** 
 $$\text{Q: Calculate}\space2 + 2 \times 6$$
 
-#### **Step 1) Group sampling**
+## **Step 1) Group sampling**
 Generate $(G = 8)$ responses, $4$ of which are correct answer ($14, \text{reward=} 1$) and $4$ incorrect $\text{(reward= 0)}$, Therefore:
 
 $${o_1:14(correct), o_2:10 (wrong), o_3:16 (wrong), ... o_G:14(correct)}$$
-#### **Step 2) Advantage Calculation**
+## **Step 2) Advantage Calculation**
 - Group Average: 
 $$mean(r_i) = 0.5$$
 - Std: $$std(r_i) = 0.53$$
 - Advantage Value:
 	- Correct response: $A_i = \frac{1 - 0.5}{0.53}= 0.94$
 	- Wrong response: $A_i = \frac{0 - 0.5}{0.53}= -0.94$
-#### **Step 3) Policy Update**
+## **Step 3) Policy Update**
 - Assuming the probability of old policy ($\pi_{\theta_{old}}$) for a correct output $o_1$ is $0.5$ and the new policy increases it to $0.7$ then:
 $$\text{Ratio}: \frac{0.7}{0.5} = 1.4  →\text{after Clip}\space1.2 \space (\epsilon = 0.2)$$
 - Then when the target function is re-weighted, the model tends to reinforce the generation of correct output, and the $\text{KL Divergence}$  limits the deviation from the reference policy. 
-
-
