@@ -8,7 +8,7 @@ Mostly in verifiable domains like Math reasoning or/and code generation that req
 # Steps of GRPO
 ## Step 1) **Group Sampling**:
 ### **Action:** 
-For each question $q$, the model will generate $G$ outputs (group size) from the old policy model:{ ${o_1, o_2, o_3, \dots, o_G}\pi_{\theta_{\text{old}}}$ }, $G=8$ where each $o_i$ represents one completion from the model.
+For each question $q$, the model will generate $G$ outputs (group size) from the old policy model:{ ${o_1, o_2, o_3, , o_G}\pi_{\theta_{\text{old}}}$ }, $G=8$ where each $o_i$ represents one completion from the model.
 ### **Example**:
 - **Question** 
 	- $q$ : $\text{Calculate}\space2 + 2 \times 6$
