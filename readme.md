@@ -1,11 +1,11 @@
 # Core intuition of GRPO
-### **Goal:**
+### 🥅 **Goal:**
 GRPO directly evaluates the model-generated responses by comparing them within groups of generation to optimize policy model, instead of training a seperate value model (Critic). This approach leads to significant reduction in computational cost!
 
-### **Application**: 
+### 📱**Application**: 
 Mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause the original deepseek-r1 model that uses grpo, has a set of rule-based reward scenario where there are defined rules for the desired output (e.g. in case of math, there is clear correct answer). 
 
-# Steps of GRPO
+# 🐾 Steps of GRPO
 ## Step 1) **Group Sampling**:
 ### **Action:** 
 For each question $q$, the model will generate $G$ outputs (group size) from the old policy model:{ ${o_1, o_2, o_3, \dots, o_G}\pi_{\theta_{\text{old}}}$ }, $G=8$ where each $o_i$ represents one completion from the model.
@@ -13,7 +13,7 @@ For each question $q$, the model will generate $G$ outputs (group size) from the
 - **Question** 
 	- $q$ : $\text{Calculate}\space2 + 2 \times 6$
 - **Output**: we will have $8$ responses; $(G = 8)$	$${o_1:14(correct), o_2:10 (wrong), o_3:16 (wrong), ... o_G:14(correct)}$$
-## Step 2) **Advantage calculation**:
+## 🐾 Step 2) **Advantage calculation**:
 ### **Reward Distribution:**
 Assign a RM score to each of the generated responses based on the correctness $r_i$ *(e.g. 1 for correct response, 0 for wrong response)* then for each of the $r_i$ calculate the following Advantage value 
 ### **Advantage value formula**:
@@ -28,16 +28,16 @@ for the same example above, imagine we have 8 responses, 4 of which is correct a
 ### **Meaning**:  
 - This standardization (i.e. $A_i$ weighting) allows the model to assess each response's relative performance, guiding the optimization process to favour responses that are better than average (high reward) and discourage those that are worse.  For instance if $A_i > 0$, then the $o_i$ is better response than the average level within it's group; and if if $A_i < 0$, then the $o_i$ then the quality of the response is less than the average (i.e. poor quality/performance). 
 - For the example above, if $A_i = 0.94 \text{(correct output)}$ then during optimization steps its generation probability will be increased. 
-## Step 3) **Policy Update; Target Function:** 
+## 🐾 Step 3) **Policy Update; Target Function:** 
 $$J_{GRPO}(\theta) = \left[\frac{1}{G} \sum_{i=1}^{G} \min \left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)} A_i \text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon \right) A_i \right)\right]- \beta D_{KL}(\pi_{\theta} || \pi_{ref})$$
 
-## **Key components of the Target function**:
+## 🔑 **Key components of the Target function**:
 ## **1. Probability ratio:** $\left(\frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}\right)$ 
 Intuitively, the formula compares how much the new model's response probability differs from the old model's response probability while incorporating a preference for responses that improve the expected outcome.
 ### **Meaning**:
 - If $\text{ratio} > 1$, the new model assigns a higher probability to response $o_i$​ than the old model.
 - If $\text{ratio} < 1$, the new model assigns a lower probability to $o_i$​ 
-## **2. Clip function:** $\text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon\right)$ 
+## **2. ✂️ Clip function:** $\text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon\right)$ 
 Limit the ratio discussed above to be within $[1 - \epsilon, 1 + \epsilon]$ to avoid/control drastic changes or crazy updates and stepping too far off from the old policy. In other words, it limit how much the probability ratio can increase to help maintaining stability by avoiding updates that push the new model too far from the old one.
 ### **Example** $\space \text{suppose}(\epsilon = 0.2)$
 - **Case 1**: if the new policy has a probability of 0.9 for a specific response and the old policy has a probabiliy of 0.5, it means this response is getting reiforeced by the new policy to have higher probability, but within a controlled limit which is the clipping to tight up its hands to not get drastic 
@@ -50,7 +50,7 @@ Limit the ratio discussed above to be within $[1 - \epsilon, 1 + \epsilon]$ to a
 - If the old model overestimated a response that performs poorly, the new model is **discouraged** from maintaining that high probability.
 - Therefore, intuitively, By incorporating the probability ratio, the objective function ensures that updates to the policy are proportional to the advantage $A_i$ while being moderated to prevent drastic changes. T
 
-## **3. KL Divergence:**  $\beta D_{KL}(\pi_{\theta} || \pi_{ref})$
+## **3. 🚩 KL Divergence:**  $\beta D_{KL}(\pi_{\theta} || \pi_{ref})$
 KL Divergence is used to prevent over-optimization of the reward model, which in this context is refers to when the model output non-sensical text or in our math reasoning example, the model will generate extremely incorrect answers!
 ### **Example**
 Suppose the reward model has a flaw—it **wrongly assigns higher rewards to incorrect outputs** due to spurious correlations in the training data. So,  $2 + 2 \times 6 = 20$ then later the Ratio $R(o_6​=20)=0.95$ *(wrong but rewarded highly)*, without KL Divergence, during optimization, the model will learn to favours responses that are higher numbers, assuming they indicate *"more confident"* reasoning, i.e. the model starts shifting its policy towards these outputs. And future iterations reinforce these incorrect answers. So, say  $2 + 2 \times 6 = 42 \space \text{(a random common number in datasets)}$. This response doesn't even resemble arithmetic errors anymore. Instead, the model has learned to exploit whatever patterns maximize the reward signal, regardless of correctness. 
@@ -73,7 +73,7 @@ In RLHF, the two distributions of interest are often the distribution of the new
 	- Over-optimization risk: If the reward model is flawed, the policy might generate nonsensical outputs.
 - **Original** [DeepSeekMath](https://arxiv.org/abs/2402.03300) paper set this $\beta= 0.04$
 
-# Complete Simple Math Example
+# 🧮 Complete Simple Math Example
 ## **Question** 
 $$\text{Q: Calculate}\space2 + 2 \times 6$$
 
