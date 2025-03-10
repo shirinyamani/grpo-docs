@@ -1,8 +1,8 @@
 # Core intuition of GRPO
-## **Goal**
+### **Goal**
 **By comparing the completion generated within groups** by the policy model, rather than training the value model (Critic), leading to significant reduction of computational cost!
 
-## **Application**: 
+### **Application**: 
 mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause this is a rule-based reward scenario
 
 # Steps of GRPO
