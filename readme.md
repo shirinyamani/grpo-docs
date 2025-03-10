@@ -13,10 +13,10 @@ For each question $q$, the model will generate $G$ outputs (group size) from the
 - **Question** 
 	- $q$ : $\text{Calculate}\space2 + 2 \times 6$
 - **Output**: we will have $8$ responses; $(G = 8)$	$${o_1:14(correct), o_2:10 (wrong), o_3:16 (wrong), ... o_G:14(correct)}$$
-## 🐾 Step 2) **Advantage calculation**:
+## 🐾 Step 2) **Advantage Calculation**:
 ### **Reward Distribution:**
 Assign a RM score to each of the generated responses based on the correctness $r_i$ *(e.g. 1 for correct response, 0 for wrong response)* then for each of the $r_i$ calculate the following Advantage value 
-### **Advantage value formula**:
+### **Advantage Value Formula**:
 $$A_i = \frac{r_i - \text{mean}(\{r_1, r_2, \ldots, r_G\})}{\text{std}(\{r_1, r_2, \ldots, r_G\})}$$
 ### **Example**:
 for the same example above, imagine we have 8 responses, 4 of which is correct and the rest wrong, therefore;
@@ -31,13 +31,13 @@ for the same example above, imagine we have 8 responses, 4 of which is correct a
 ## 🐾 Step 3) **Policy Update; Target Function:** 
 $$J_{GRPO}(\theta) = \left[\frac{1}{G} \sum_{i=1}^{G} \min \left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)} A_i \text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon \right) A_i \right)\right]- \beta D_{KL}(\pi_{\theta} || \pi_{ref})$$
 
-## 🔑 **Key components of the Target function**:
-## 📊 **1. Probability ratio:** $\left(\frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}\right)$ 
+## 🔑 **Key Components of the Target function**:
+## 📊 **1. Probability Ratio:** $\left(\frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}\right)$ 
 Intuitively, the formula compares how much the new model's response probability differs from the old model's response probability while incorporating a preference for responses that improve the expected outcome.
 ### **Meaning**:
 - If $\text{ratio} > 1$, the new model assigns a higher probability to response $o_i$​ than the old model.
 - If $\text{ratio} < 1$, the new model assigns a lower probability to $o_i$​ 
-## **2. ✂️ Clip function:** $\text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon\right)$ 
+## **2. ✂️ Clip Function:** $\text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon\right)$ 
 Limit the ratio discussed above to be within $[1 - \epsilon, 1 + \epsilon]$ to avoid/control drastic changes or crazy updates and stepping too far off from the old policy. In other words, it limit how much the probability ratio can increase to help maintaining stability by avoiding updates that push the new model too far from the old one.
 ### **Example** $\space \text{suppose}(\epsilon = 0.2)$
 - **Case 1**: if the new policy has a probability of 0.9 for a specific response and the old policy has a probabiliy of 0.5, it means this response is getting reiforeced by the new policy to have higher probability, but within a controlled limit which is the clipping to tight up its hands to not get drastic 
@@ -77,7 +77,7 @@ In RLHF, the two distributions of interest are often the distribution of the new
 ## **Question** 
 $$\text{Q: Calculate}\space2 + 2 \times 6$$
 
-## **Step 1) Group sampling**
+## **Step 1) Group Sampling**
 Generate $(G = 8)$ responses, $4$ of which are correct answer ($14, \text{reward=} 1$) and $4$ incorrect $\text{(reward= 0)}$, Therefore:
 
 $${o_1:14(correct), o_2:10 (wrong), o_3:16 (wrong), ... o_G:14(correct)}$$
