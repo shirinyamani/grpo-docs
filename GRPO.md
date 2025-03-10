@@ -1,9 +1,9 @@
 # Core intuition of GRPO
 ### **Goal:**
-By comparing the generation output within groups to optimize policy model, there is no need to train the value model (Critic), leading to significant reduction of computational cost!
+GRPO directly evaluates the model-generated responses by comparing them within groups of generation to optimize policy model, instead of training a seperate value model (Critic). This approach leads to significant reduction in computational cost!
 
 ### **Application**: 
-mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause this is a rule-based reward scenario where there are defined rules for the desired output. 
+Mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause the original deepseek-r1 model that uses grpo, has a set of rule-based reward scenario where there are defined rules for the desired output (e.g. in case of math, there is clear correct answer). 
 
 # Steps of GRPO
 ## Step 1) **Group Sampling**:
