@@ -1,8 +1,11 @@
 # Core intuition of GRPO
+
 ##### **Goal**
 **By comparing the completion generated within groups** by the policy model, rather than training the value model (Critic), leading to significant reduction of computational cost!
+
 ##### **Application**: 
 mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause this is a rule-based reward scenario
+
 # Steps of GRPO
 ### Step 1) **Group Sampling**:
 #### **Action:** 
@@ -28,16 +31,7 @@ for the same example above, imagine we have 8 responses, 4 of which is correct a
 - For the example above, if $A_i = 0.94 \text{(correct output)}$ then during optimization steps its generation probability will be increased. 
 ### Step 3) **Policy Update:** 
 #### **Target Function**:
-$$
-J_{GRPO}(\theta) = \left[
-\frac{1}{G} \sum_{i=1}^{G} 
-\min \left(
-\frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)} A_i, 
-\text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon \right) A_i
-\right)
-\right] 
-- \beta D_{KL}(\pi_{\theta} || \pi_{ref})
-$$
+$$J_{GRPO}(\theta) = \left[\frac{1}{G} \sum_{i=1}^{G} \min \left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)} A_i \text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon \right) A_i \right)\right]- \beta D_{KL}(\pi_{\theta} || \pi_{ref})$$
 
 #### **Key components of the Target function**:
 ##### **1. Probability ratio:**   $\left(\frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}\right)$ 
@@ -69,9 +63,7 @@ Suppose the reward model has a flaw—it **wrongly assigns higher rewards to inc
 -  The 
 ##### **Math Definition**
 Recall that KL distance is defined as follows:
-$$
-D_{KL}(P || Q) = \sum_{x \in X} P(x) \log \frac{P(x)}{Q(x)}
-$$
+$$D_{KL}(P || Q) = \sum_{x \in X} P(x) \log \frac{P(x)}{Q(x)}$$
 In RLHF, the two distributions of interest are often the distribution of the new model version, say $P(x)$, and a distribution of the reference policy, say $Q(x)$.
 ##### **Term** $\beta \space$ in $\beta D_{KL}(\pi_{\theta} || \pi_{ref})$
 -  **Higher $\beta$ (Stronger KL Penalty)**
