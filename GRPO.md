@@ -84,7 +84,7 @@ Generate $(G = 8)$ responses, $4$ of which are correct answer ($14, \text{reward
 
 $${o_1:14(correct), o_2:10 (wrong), o_3:16 (wrong), ... o_G:14(correct)}$$
 #### **Step 2) Advantage Calculation**
-- Group Average: 
+Group Average: 
 $$mean(r_i) = 0.5$$
 - Std: $$std(r_i) = 0.53$$
 - Advantage Value:
