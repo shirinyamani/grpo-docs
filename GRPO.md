@@ -64,7 +64,7 @@ Suppose the reward model has a flaw—it **wrongly assigns higher rewards to inc
 ##### **Math Definition**
 Recall that KL distance is defined as follows:
 $$D_{KL}(P || Q) = \sum_{x \in X} P(x) \log \frac{P(x)}{Q(x)}$$
-In RLHF, the two distributions of interest are often the distribution of the new model version,  $P(x)$, and a distribution of the reference policy, say $Q(x)$.
+In RLHF, the two distributions of interest are often the distribution of the new model version, P(x), and a distribution of the reference policy, Q(x).
 ##### **Term** $\beta \space$ in $\beta D_{KL}(\pi_{\theta} || \pi_{ref})$
 -  **Higher $\beta$ (Stronger KL Penalty)**
     - More constraint on policy updates. The model remains close to its reference distribution.
