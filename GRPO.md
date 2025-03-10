@@ -1,20 +1,20 @@
 # Core intuition of GRPO
-#### **Goal**
+## **Goal**
 **By comparing the completion generated within groups** by the policy model, rather than training the value model (Critic), leading to significant reduction of computational cost!
 
-#### **Application**: 
+## **Application**: 
 mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause this is a rule-based reward scenario
 
 # Steps of GRPO
-### Step 1) **Group Sampling**:
-#### **Action:** 
+## Step 1) **Group Sampling**:
+### **Action:** 
 For each question $q$, the model will generate $G$ outputs (group size) from the old policy model: $\left({o_1, o_2, o_3, \dots, o_G}\right)\pi_{\theta_{\text{old}}}$ , $G=8$ where each $o_i$ represents one completion from the model.
-#### **Example**:
+### **Example**:
 - **Question** 
 	- $q$ : $\text{Calculate}\space2 + 2 \times 6$
 - **Output**: we will have $8$ responses; $(G = 8)$	$${o_1:14(correct), o_2:10 (wrong), o_3:16 (wrong), ... o_G:14(correct)}$$
-### Step 2) **Advantage calculation**:
-#### **Reward Distribution:**
+## Step 2) **Advantage calculation**:
+### **Reward Distribution:**
 Assign a RM score to each of the generated responses based on the correctness $r_i$ *(e.g. 1 for correct response, 0 for wrong response)* then for each of the $r_i$ calculate the following Advantage value 
 #### **Advantage value formula**:
 **Formula**:
