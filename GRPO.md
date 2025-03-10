@@ -80,7 +80,7 @@ In RLHF, the two distributions of interest are often the distribution of the new
 $$\text{Q: Calculate}\space2 + 2 \times 6$$
 
 #### **Step 1) Group sampling**
-Generate $(G = 8)$ responses, $4$ of which are correct answer ($14, \text{reward}\space 1$) and $4$ incorrect $\text{(reward\space 0)}$, Therefore:
+Generate $(G = 8)$ responses, $4$ of which are correct answer ($14, \text{reward=} 1$) and $4$ incorrect $\text{(reward= 0)}$, Therefore:
 $${o_1:14(correct), o_2:10 (wrong), o_3:16 (wrong), ... o_G:14(correct)}$$
 #### **Step 2) Advantage Calculation**
 - Group Average: $mean(r_i) = 0.5$
