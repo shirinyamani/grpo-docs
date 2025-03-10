@@ -16,27 +16,27 @@ For each question $q$, the model will generate $G$ outputs (group size) from the
 ## Step 2) **Advantage calculation**:
 ### **Reward Distribution:**
 Assign a RM score to each of the generated responses based on the correctness $r_i$ *(e.g. 1 for correct response, 0 for wrong response)* then for each of the $r_i$ calculate the following Advantage value 
-#### **Advantage value formula**:
+### **Advantage value formula**:
 **Formula**:
 $$A_i = \frac{r_i - \text{mean}(\{r_1, r_2, \ldots, r_G\})}{\text{std}(\{r_1, r_2, \ldots, r_G\})}$$
-#### **Example**:
+### **Example**:
 for the same example above, imagine we have 8 responses, 4 of which is correct and the rest wrong, therefore;
 - Group Average: $mean(r_i) = 0.5$
 - Std: $std(r_i) = 0.53$
 - Advantage Value:
 	- Correct response: $A_i = \frac{1 - 0.5}{0.53}= 0.94$
 	- Wrong response: $A_i = \frac{0 - 0.5}{0.53}= -0.94$
-##### **Meaning**:  
+#### **Meaning**:  
 - This standardization (i.e. $A_i$ weighting) allows the model to assess each response's relative performance, guiding the optimization process to favour responses that are better than average (high reward) and discourage those that are worse.  For instance if $A_i > 0$, then the $o_i$ is better response than the average level within it's group; and if if $A_i < 0$, then the $o_i$ then the quality of the response is less than the average (i.e. poor quality/performance). 
 - For the example above, if $A_i = 0.94 \text{(correct output)}$ then during optimization steps its generation probability will be increased. 
-### Step 3) **Policy Update:** 
-#### **Target Function**:
+## Step 3) **Policy Update:** 
+### **Target Function**:
 $$J_{GRPO}(\theta) = \left[\frac{1}{G} \sum_{i=1}^{G} \min \left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)} A_i \text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon \right) A_i \right)\right]- \beta D_{KL}(\pi_{\theta} || \pi_{ref})$$
 
-#### **Key components of the Target function**:
-##### **1. Probability ratio:**   $\left(\frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}\right)$ 
+### **Key components of the Target function**:
+#### **1. Probability ratio:**   $\left(\frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}\right)$ 
 Intuitively, the formula compares how much the new model's response probability differs from the old model's response probability while incorporating a preference for responses that improve the expected outcome.
-###### **Meaning**:
+##### **Meaning**:
 - If $\text{ratio} > 1$, the new model assigns a higher probability to response $o_i$​ than the old model.
 - If $\text{ratio} < 1$, the new model assigns a lower probability to $o_i$​ 
 ##### **2. Clip function:** $\text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon \right)$ 
