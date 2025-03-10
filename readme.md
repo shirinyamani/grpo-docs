@@ -5,8 +5,8 @@ GRPO directly evaluates the model-generated responses by comparing them within g
 ### 📱**Application**: 
 Mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause the original deepseek-r1 model that uses grpo, has a set of rule-based reward scenario where there are defined rules for the desired output (e.g. in case of math, there is clear correct answer). 
 
-# 🐾 Steps of GRPO
-## Step 1) **Group Sampling**:
+# Steps of GRPO
+## 🐾 Step 1) **Group Sampling**:
 ### **Action:** 
 For each question $q$, the model will generate $G$ outputs (group size) from the old policy model:{ ${o_1, o_2, o_3, \dots, o_G}\pi_{\theta_{\text{old}}}$ }, $G=8$ where each $o_i$ represents one completion from the model.
 ### **Example**:
