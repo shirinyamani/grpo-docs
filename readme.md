@@ -4,6 +4,7 @@ GRPO directly evaluates the model-generated responses by comparing them within g
 
 ### 📱**Application**: 
 Mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause the original deepseek-r1 model that uses grpo, has a set of rule-based reward scenario where there are defined rules for the desired output (e.g. in case of math, there is clear correct answer).
+
 > Yes, but can also be exteneded to any domain where it's possible to define a _verifier_.  We're seing a lot of interest for this, see open-r1 issues or packages like https://github.com/willccbb/verifiers
 
 # Steps of GRPO
@@ -122,29 +123,28 @@ $$\text{Ratio}: \frac{0.7}{0.5} = 1.4  →\text{after Clip}\space1.2 \space (\ep
 # 💻 Complere Code Example
 
 > It's up to you to decide what direction you want this document to take. If the aim is to get the intuition behind, then I wouldn't talk about multi-tasking, which isn't central. Instead, I'd try to provide minimal GRPO code, without TRL. TRL somehow hides what's Hides the way GRPO works to provide the user with a simple interface. This minimal GRPO code, could contain sampling, the calculation of a very simple reward, even a naive one, the calculation of the advantage in its simplest form (single step, no pi_old etc), the calculation of the KL term, the calculation of the loss, then the backward. A bit like this, but for GRPO:
-
->>> ```python
->>> import torch
->>> 
->>> # Create a simple dataset: y = 2x
->>> x = torch.tensor([[1.0], [2.0], [3.0], [4.0]])
->>> y = torch.tensor([[2.0], [4.0], [6.0], [8.0]])
->>> 
->>> # Define a simple linear model
->>> model = torch.nn.Linear(1, 1)
->>> 
->>> # Define loss function and optimizer
->>> loss_fn = torch.nn.MSELoss()
->>> optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
->>> 
->>> # Training loop
->>> for _ in range(100):
->>>     optimizer.zero_grad()       # Reset gradients
->>>     y_pred = model(x)           # Forward pass
->>>     loss = loss_fn(y_pred, y)   # Compute loss
->>>     loss.backward()             # Backpropagation
->>>     optimizer.step()            # Update weights
->>> ```
+> ```python
+> import torch
+> 
+> # Create a simple dataset: y = 2x
+> x = torch.tensor([[1.0], [2.0], [3.0], [4.0]])
+> y = torch.tensor([[2.0], [4.0], [6.0], [8.0]])
+> 
+> # Define a simple linear model
+> model = torch.nn.Linear(1, 1)
+> 
+> # Define loss function and optimizer
+> loss_fn = torch.nn.MSELoss()
+> optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+> 
+> # Training loop
+> for _ in range(100):
+>     optimizer.zero_grad()       # Reset gradients
+>     y_pred = model(x)           # Forward pass
+>     loss = loss_fn(y_pred, y)   # Compute loss
+>     loss.backward()             # Backpropagation
+>     optimizer.step()            # Update weights
+> ```
 
 As discussed above, the GRPO algorithm involves three main steps:
 1. Group Sampling: Generate multiple responses for each question. Then evaluate the responses based on the reward model (reward scoring).
