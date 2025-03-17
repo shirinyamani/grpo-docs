@@ -133,13 +133,6 @@ outputs = model.generate(
     output_scores=True
 )
 ```
-this should output something like this:
-```text
-Generation 1: Just Solve y = 2x + 1 for x = 2, what is y? 1. Substitute x = 2 into the equation y = 2x + 1.
-2. y = 2(2) + 1
-3. y = 4 + 1
-4. y = 5
-```
 ### Step 2) Calculate the Reward for each of the generated outputs
 With GRPO, with the same sample prompt, we generate multiple completions. So for instance, for our prompt of `"Solve y = 2x + 1 for x = 2, y = "` we have two group of generated outputs for the given prompt one is say 
 - `[5, 6, 7, 5]` and the other is 
