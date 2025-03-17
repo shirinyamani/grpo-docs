@@ -226,17 +226,20 @@ Note that the `per_token_logps` can be achieved by passing the generated outputs
 ```python
 # Clipping Function
 eps = self.cliprange  # e.g. 0.2 
-pg_losses1 = -advantages * ratio  # Shape: (B*G, seq_len) 
-pg_losses2 = -advantages * torch.clamp(ratio, 1.0 - eps, 1.0 + eps)  # Shape: (B*G, seq_len)
-pg_loss_max = torch.max(pg_losses1, pg_losses2)  # Shape: (B*G, seq_len)
+pg_losses1 = -advantages * ratio  # Shape: (B*G, seq_len)  #(8, 1)
+pg_losses2 = -advantages * torch.clamp(ratio, 1.0 - eps, 1.0 + eps)  # Shape: (B*G, seq_len) #(8, 1)
+pg_loss_max = torch.max(pg_losses1, pg_losses2)  # Shape: (B*G, seq_len) #(8, 1)
 
-# Now Combine with KL penalty
-per_token_loss = pg_loss_max + self.beta * per_token_kl  # Shape: (B*G, seq_len)
+
+# Now Combine with KL penalty # Shape: (B*G, seq_len) #(8, 1)
+per_token_loss = pg_loss_max + self.beta * per_token_kl  
 ```
+
 `per_token_kl` can also be calculated as follows:
 
 ```python
-per_token_kl = F.kl_div(F.log_softmax(new_per_token_logps, dim=-1), F.softmax(per_token_logps, dim=-1), reduction="none").sum(dim=-1, keepdim=True)  # Shape: (B*G, seq_len) #(8, 1)
+# Shape: (B*G, seq_len) #(8, 1)
+per_token_kl = F.kl_div(F.log_softmax(new_per_token_logps, dim=-1), F.softmax(per_token_logps, dim=-1), reduction="none").sum(dim=-1, keepdim=True)  
 ```
 
 
