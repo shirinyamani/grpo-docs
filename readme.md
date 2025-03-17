@@ -3,12 +3,14 @@
 GRPO directly evaluates the model-generated responses by comparing them within groups of generation to optimize policy model, instead of training a seperate value model (Critic). This approach leads to significant reduction in computational cost!
 
 ### 📱**Application**: 
-Mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause the original deepseek-r1 model that uses grpo, has a set of rule-based reward scenario where there are defined rules for the desired output (e.g. in case of math, there is clear correct answer). 
+Mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause the original deepseek-r1 model that uses grpo, has a set of rule-based reward scenario where there are defined rules for the desired output (e.g. in case of math, there is clear correct answer).
+> Yes, but can also be exteneded to any domain where it's possible to define a _verifier_.  We're seing a lot of interest for this, see open-r1 issues or packages like https://github.com/willccbb/verifiers
 
 # Steps of GRPO
 ## 🐾 Step 1) **Group Sampling**:
 ### **Action:** 
 For each question $q$, the model will generate $G$ outputs (group size) from the old policy model:{ ${o_1, o_2, o_3, \dots, o_G}\pi_{\theta_{\text{old}}}$ }, $G=8$ where each $o_i$ represents one completion from the model.
+> nit, but I feel it's clearer "from the trained policy". The _old_ term makes sense when you do multiple updates, but here I'm not sure it's worth mentionning
 ### **Example**:
 - **Question** 
 	- $q$ : $\text{Calculate}\space2 + 2 \times 6$
@@ -32,6 +34,8 @@ for the same example above, imagine we have 8 responses, 4 of which is correct a
 $$J_{GRPO}(\theta) = \left[\frac{1}{G} \sum_{i=1}^{G} \min \left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)} A_i \text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1 - \epsilon, 1 + \epsilon \right) A_i \right)\right]- \beta D_{KL}(\pi_{\theta} || \pi_{ref})$$
 
 ## 🔑 **Key Components of the Target function**:
+
+> Since intuition is the focus here, I recommend simplifying by first considering the single-step case. This approach eliminates the need to explain the ratio, the _old_ policy, or the clipping at this stage. Instead, these concepts can be introduced later—perhaps in a 'Further Exploration' section—when discussing sample reuse and the necessary modifications to the loss function.
 ## 📊 **1. Probability Ratio:** $\left(\frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}\right)$ 
 Intuitively, the formula compares how much the new model's response probability differs from the old model's response probability while incorporating a preference for responses that improve the expected outcome.
 ### **Meaning**:
@@ -51,14 +55,30 @@ Limit the ratio discussed above to be within $[1 - \epsilon, 1 + \epsilon]$ to a
 - Therefore, intuitively, By incorporating the probability ratio, the objective function ensures that updates to the policy are proportional to the advantage $A_i$ while being moderated to prevent drastic changes. T
 
 ## **3. 🚩 KL Divergence:**  $\beta D_{KL}(\pi_{\theta} || \pi_{ref})$
+
+> Start by explaining what's pi_ref?
+
 KL Divergence is used to prevent over-optimization of the reward model, which in this context is refers to when the model output non-sensical text or in our math reasoning example, the model will generate extremely incorrect answers!
+
+> It's not the reward model that we optimize. Maybe something like this:
+> 
+> KL divergence is minimized to prevent the model from deviating too far from its original behavior during optimization. This helps strike a balance between improving performance based on the reward signal and maintaining coherence. In this context, minimizing KL divergence reduces the risk of the model generating nonsensical text or, in the case of mathematical reasoning, producing extremely incorrect answers.
+
 ### **Example**
 Suppose the reward model has a flaw—it **wrongly assigns higher rewards to incorrect outputs** due to spurious correlations in the training data. So,  $2 + 2 \times 6 = 20$ then later the Ratio $R(o_6​=20)=0.95$ *(wrong but rewarded highly)*, without KL Divergence, during optimization, the model will learn to favours responses that are higher numbers, assuming they indicate *"more confident"* reasoning, i.e. the model starts shifting its policy towards these outputs. And future iterations reinforce these incorrect answers. So, say  $2 + 2 \times 6 = 42 \space \text{(a random common number in datasets)}$. This response doesn't even resemble arithmetic errors anymore. Instead, the model has learned to exploit whatever patterns maximize the reward signal, regardless of correctness. 
+
+> The example might be misleading because it suggests KL divergence is only needed when the reward model is flawed. In reality, even with a perfect reward model, KL divergence is essential to prevent reward hacking, ensure stable training, and maintain coherence. Without it, the model could over-optimize for high-reward responses in unintended ways, leading to extreme or unnatural outputs. A better example would highlight that KL divergence is a necessary regularization term, not just a fix for reward model flaws.
+>
+> Also, to add some nuance, some training runs without KL have shown that optimization can proceed reasonably well, so KL term might not be absolutly needed all the time.
+
 ### **Meaning**
 - A KL divergence penalty keeps the model’s outputs close to its original distribution, preventing extreme shifts.
 - Even if incorrect answers receive high rewards, the model cannot deviate too much from what it originally considered reasonable.
 - Instead of drifting towards completely irrational outputs, the model would refine its understanding while still allowing some exploration
--  The 
+-  The
+ 
+> I'd remove point 2 for the reason exposed above
+
 ### **Math Definition**
 Recall that KL distance is defined as follows:
 $$D_{KL}(P || Q) = \sum_{x \in X} P(x) \log \frac{P(x)}{Q(x)}$$
@@ -76,6 +96,8 @@ In RLHF, the two distributions of interest are often the distribution of the new
 Below is the picture of the GRPO algorithm in a nutshell:
 
 ![deep](./img/2.jpg)
+
+> Place figure in the beginning?
 
 # 🧮 Complete Simple Math Example
 ## **Question** 
@@ -98,6 +120,32 @@ $$\text{Ratio}: \frac{0.7}{0.5} = 1.4  →\text{after Clip}\space1.2 \space (\ep
 - Then when the target function is re-weighted, the model tends to reinforce the generation of correct output, and the $\text{KL Divergence}$  limits the deviation from the reference policy. 
 
 # 💻 Complere Code Example
+
+> It's up to you to decide what direction you want this document to take. If the aim is to get the intuition behind, then I wouldn't talk about multi-tasking, which isn't central. Instead, I'd try to provide minimal GRPO code, without TRL. TRL somehow hides what's Hides the way GRPO works to provide the user with a simple interface. This minimal GRPO code, could contain sampling, the calculation of a very simple reward, even a naive one, the calculation of the advantage in its simplest form (single step, no pi_old etc), the calculation of the KL term, the calculation of the loss, then the backward. A bit like this, but for GRPO:
+
+>>> ```python
+>>> import torch
+>>> 
+>>> # Create a simple dataset: y = 2x
+>>> x = torch.tensor([[1.0], [2.0], [3.0], [4.0]])
+>>> y = torch.tensor([[2.0], [4.0], [6.0], [8.0]])
+>>> 
+>>> # Define a simple linear model
+>>> model = torch.nn.Linear(1, 1)
+>>> 
+>>> # Define loss function and optimizer
+>>> loss_fn = torch.nn.MSELoss()
+>>> optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+>>> 
+>>> # Training loop
+>>> for _ in range(100):
+>>>     optimizer.zero_grad()       # Reset gradients
+>>>     y_pred = model(x)           # Forward pass
+>>>     loss = loss_fn(y_pred, y)   # Compute loss
+>>>     loss.backward()             # Backpropagation
+>>>     optimizer.step()            # Update weights
+>>> ```
+
 As discussed above, the GRPO algorithm involves three main steps:
 1. Group Sampling: Generate multiple responses for each question. Then evaluate the responses based on the reward model (reward scoring).
 	-  This reward model/function can be:
