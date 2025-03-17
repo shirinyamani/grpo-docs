@@ -93,7 +93,7 @@ $$mean(r_i) = 0.5$$
 $$\text{Ratio}: \frac{0.7}{0.5} = 1.4  →\text{after Clip}\space1.2 \space (\epsilon = 0.2)$$
 - Then when the target function is re-weighted, the model tends to reinforce the generation of correct output, and the $\text{KL Divergence}$  limits the deviation from the reference policy. 
 
-# Complere Code Example
+# 💻 Complere Code Example
 As discussed above, the GRPO algorithm involves three main steps:
 1. Group Sampling: Generate multiple responses for each question. Then evaluate the responses based on the reward model (reward scoring).
 	-  This reward model can be:
@@ -102,12 +102,12 @@ As discussed above, the GRPO algorithm involves three main steps:
 2. Advantage Calculation: Calculate the advantage value for each response.
 3. Policy Update: Update the policy model based on the advantage values.
 
-## Note on Reward Model
+## 📝 Note on Reward Model
 - The reward model can be a simple rule-based model that assigns rewards based on the correctness of the response.
 - Alternatively, it can be an NN-based network reward model that can be trained to assign rewards based on the correctness of the response.
 -Currently TRL supports all combinations of reward models, including rule-based reward models and NN-based reward models, mixed of both, or even the scenario that we have reward model for *some* of the samples in the dataset and not for others (Multi-task reward model). This flexibility allows the user to choose the most suitable reward model for their specific task. For example, imagine a scenario where the user has a dataset of mixed promts like math reasoning, code generation, and text generation. However, the user has only a rule-based reward model for math reasoning and **NOT** for code generation. In this case, the user can use a Multi-task reward model schema supported in TRL free of stress for crash because of a missing reward model for code generation. But Note that we always need to have at least one corresponding reward model for the samples in the dataset. 
 
-# Example of rule-based reward model
+# 🐍 Example of Multi-task rule-based reward model
 ```python
 
 def format_reward_func(completions, target, **kwargs):
@@ -302,4 +302,35 @@ trainer.train()
 
 As you see in the above training argument the `reward_funcs=[simple_math_reward_func, math_reward_func]` though we also have a `code_reward_func` but we are not using it in this training cause for instance the dataset we picked for training does not have code samples prompts. But this will not cause any crash or error, the code will run smoothly. 😎
 
+# 🔥 Example of Mixed rule-based reward model
 
+```python
+def test_training_multiple_mixed_reward_funcs(self):
+        # Test if the trainer can handle a mix of reward functions and reward models
+        dataset = load_dataset("trl-internal-testing/zen", "standard_prompt_only", split="train")
+
+		def reward_func(completions, **kwargs):
+			"""Reward function that rewards completions longer than the batch average."""
+			avg_length = sum(len(c) for c in completions) / len(completions) if completions else 1
+			return [float(len(c) / avg_length) for c in completions]
+
+            training_args = GRPOConfig(
+                output_dir=tmp_dir,
+                learning_rate=0.1,  # increase the learning rate to speed up the test
+                per_device_train_batch_size=3,  # reduce the batch size to reduce memory usage
+                num_generations=3,  # reduce the number of generations to reduce memory usage
+                max_completion_length=32,  # reduce the completion length to reduce memory usage
+                report_to="none",
+            )
+            trainer = GRPOTrainer(
+                model="trl-internal-testing/tiny-Qwen2ForCausalLM-2.5",
+                reward_funcs=[reward_func, "trl-internal-testing/tiny-Qwen2ForSequenceClassification-2.5"],
+                args=training_args,
+                train_dataset=dataset,
+            )
+
+            
+            trainer.train()
+```
+
+As you see here we have a mix of reward functions and reward models, the `reward_func` is a simple rule-based reward function that rewards longer completions, while the second reward model is a pre-trained model that assigns rewards based on the correctness of the response. This flexibility allows the user to choose the most suitable reward model for their specific task.
