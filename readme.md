@@ -243,3 +243,7 @@ Complete example can be found [here](./basic_example.py). GRPO is also implement
 
 Happy training! 🚀
 
+# References
+
+TODO
+
