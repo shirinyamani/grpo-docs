@@ -73,6 +73,10 @@ In RLHF, the two distributions of interest are often the distribution of the new
 	- Over-optimization risk: If the reward model is flawed, the policy might generate nonsensical outputs.
 - **Original** [DeepSeekMath](https://arxiv.org/abs/2402.03300) paper set this $\beta= 0.04$
 
+Below is the picture of the GRPO algorithm in a nutshell:
+
+![deep](./img/2.jpg)
+
 # 🧮 Complete Simple Math Example
 ## **Question** 
 $$\text{Q: Calculate}\space2 + 2 \times 6$$
