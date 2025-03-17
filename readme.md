@@ -170,7 +170,49 @@ def simple_math_reward_func(completions, target, nums, **kwargs):
         except Exception:
             rewards.append(0.0)
     return rewards
+def code_reward_func(completions, **kwargs):
+    """
+    Evaluates the correctness of code snippets inside <code>...</code>.
+
+    Args:
+        completions (list[str]): Generated outputs
+    
+    Returns:
+        list[float]: Reward scores
+    """
+    rewards = []
+    
+    for completion in completions:
+        try:
+            match = re.search(r"<code>([\s\S]+?)<\/code>", completion)
+            if match is None:
+                rewards.append(0.0)
+                continue
+
+            code = match.group(1).strip()
+
+            # Check for disallowed imports and unsafe execution patterns
+            if re.search(r"\b(import|exec|eval|open|os|sys|subprocess)\b", code):
+                rewards.append(0.0)
+                continue
+
+            # Validate syntax using AST (Abstract Syntax Tree)
+            try:
+                ast.parse(code)
+            except SyntaxError:
+                rewards.append(0.3)  # Partial reward for format but incorrect syntax
+                continue
+
+            rewards.append(1.0)  # Fully correct if it passes format and syntax checks
+
+        except Exception:
+            rewards.append(0.0)  # Fail-safe
+        
+    return rewards
 ```
+Note: `<think>` is synthetically added to each of the prompt by us as discussed in the original deepseek papar. 
+
+ADD THE PICTURE OF THE PAPER 
 
 We can simply test the above functions by;
 ```python
@@ -213,3 +255,47 @@ math_rewards = simple_math_reward_func(test_completions, test_target, nums=test_
 print("Math rewards:", math_rewards)
 assert math_rewards == [1.0, 1.0, 0.0, 0.0, 0.0, 0.0], "Math reward function is not working"
 ```
+
+This looks good, now we can move to the next step of defining training parameters of the GRPO algorithm.
+
+```python
+from trl import GRPOConfig, GRPOTrainer, get_peft_config, ModelConfig
+
+# our model we are going to use as policy 
+model_config = ModelConfig(
+    model_name_or_path="Qwen/Qwen2.5-3B-Instruct",
+    torch_dtype="bfloat16",
+    attn_implementation="flash_attention_2",
+    use_peft=True,
+    load_in_4bit=True,
+)
+
+# Hyperparameters
+training_args = GRPOConfig(
+    output_dir="qwen-r1-aha-moment",
+    learning_rate=5e-7,
+    lr_scheduler_type="cosine",
+    logging_steps=10,
+    max_steps=100,
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=1,
+    gradient_checkpointing=True,
+    gradient_checkpointing_kwargs={"use_reentrant": False},
+    bf16=True,
+    # GRPO specific parameters
+    max_prompt_length=256,
+    max_completion_length=1024, # max length of the generated output for our solution
+    num_generations=2,
+    beta=0.001,
+    
+)
+trainer = GRPOTrainer(
+    model=model_config.model_name_or_path,
+    reward_funcs=[simple_math_reward_func, math_reward_func],
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=test_dataset,
+    peft_config=get_peft_config(model_config),
+)
+
+
