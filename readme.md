@@ -124,9 +124,12 @@ attention_mask = inputs["attention_mask"].to(device)
 outputs = model.generate(
     input_ids, 
     attention_mask=attention_mask,  # Include attention mask
-    max_length=50, 
-    num_return_sequences=2,  # Generates 4 different completions
-    do_sample=True  # Enables sampling for diverse outputs
+    max_length=1, 
+    num_return_sequences=2,  # Generates 2 different completions
+    do_sample=True,
+	max_new_tokens=5, 
+	return_dict_in_generate=True,
+	output_scores=True
 )
 
 # Decode and print outputs
@@ -217,14 +220,23 @@ now we are good, let's move to the next step of updating the policy model based 
 ### Step 3) Policy Update
 ```python
 # Compute probability ratio between new and old policies
-ratio = torch.exp(new_per_token_logps - per_token_logps)  # Shape: (B*G, L)
+ratio = torch.exp(new_per_token_logps - per_token_logps)  # Shape: (B*G, seq_len) seq_len is the length of the output i.e. the num of generated tokens so here for simplicity let's assume it is 1 # (8, 1)
+```
+Note that the `per_token_logps` can be achieved by passing the generated outputs to the model and get the logits and then apply the softmax function to get the probabilities `F.softmax(logits, dim=-1)`.
+```python
+# Clipping Function
+eps = self.cliprange  # e.g. 0.2 
+pg_losses1 = -advantages * ratio  # Shape: (B*G, seq_len) 
+pg_losses2 = -advantages * torch.clamp(ratio, 1.0 - eps, 1.0 + eps)  # Shape: (B*G, seq_len)
+pg_loss_max = torch.max(pg_losses1, pg_losses2)  # Shape: (B*G, seq_len)
 
-# PPO clipping objective
-eps = self.cliprange  # e.g. 0.2
-pg_losses1 = -advantages * ratio  # Shape: (B*G, L)
-pg_losses2 = -advantages * torch.clamp(ratio, 1.0 - eps, 1.0 + eps)  # Shape: (B*G, L)
-pg_loss_max = torch.max(pg_losses1, pg_losses2)  # Shape: (B*G, L)
+# Now Combine with KL penalty
+per_token_loss = pg_loss_max + self.beta * per_token_kl  # Shape: (B*G, seq_len)
+```
+`per_token_kl` can also be calculated as follows:
 
-# important to GRPO -- PPO applies this in reward traditionally
-# Combine with KL penalty
-per_token_loss = pg_loss_max + self.beta * per_token_kl  # Shape: (B*G, L)
+```python
+per_token_kl = F.kl_div(F.log_softmax(new_per_token_logps, dim=-1), F.softmax(per_token_logps, dim=-1), reduction="none").sum(dim=-1, keepdim=True)  # Shape: (B*G, seq_len) #(8, 1)
+```
+
+
