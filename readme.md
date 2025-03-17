@@ -150,44 +150,26 @@ Note that in practice these reward scores are achieved by a rule-based reward fu
 reward_1 = [1, 0, 0, 1]
 reward_2 = [0, 0, 1, 1]
 ```
-next we get the group_wise mean and std of the rewards
-```python
-rewards = torch.tensor([1, 0, 0, 1, 0, 0, 1, 1])  # Shape: (B * G,) = (8,) bc we have 2 groups of 4 generations that we flatten
-num_generations = 4
-
-# Compute grouped-wise rewards
-mean_grouped_rewards = rewards.view(-1, num_generations).mean(dim=1)  # Shape: (B,) = (2,)
-std_grouped_rewards = rewards.view(-1, num_generations).std(dim=1)    # Shape: (B,) = (2,)
-
-# Normalize the rewards to compute the advantages
-mean_grouped_rewards = mean_grouped_rewards.repeat_interleave(num_generations, dim=0)  # Shape: (B * G,) = (8,)
-std_grouped_rewards = std_grouped_rewards.repeat_interleave(num_generations, dim=0)    # Shape: (B * G,) = (8,)
-advantages = (rewards - mean_grouped_rewards) / (std_grouped_rewards + 1e-8)          # Shape: (B * G,) = (8,)
-
-advantages = advantages.unsqueeze(1)  # Shape: (B * G, 1) = (8, 1) to match the logits shape
-```
+next we get the group_wise mean and std of the rewards;
 
 ```python
-rewards = torch.tensor([1, 0, 0, 1, 0, 0, 1, 1], dtype=torch.float32) # Shape: (B * G,) = (8,)
+# Shape: (B * G,) = (8,) bc we have 2 groups of 4 generations that we flatten
+rewards = torch.tensor([1, 0, 0, 1, 0, 0, 1, 1], dtype=torch.float32) 
 num_generations = 4
 
 # Group rewards: Shape (B, G) = (2, 4)
 rewards_grouped = rewards.view(-1, num_generations)
-print("Grouped Rewards:", rewards_grouped)
 
 # Mean per group: Shape (B,) = (2,)
 mean_grouped_rewards = rewards_grouped.mean(dim=1)
-print("Mean per group:", mean_grouped_rewards)
 
 # Std per group: Shape (B,) = (2,)
 std_grouped_rewards = rewards_grouped.std(dim=1)
-print("Std per group:", std_grouped_rewards)
 
-# Broadcast to match rewards: Shape (B * G,) = (8,)
+# Broadcast to match rewards and normalize: Shape (B * G,) = (8,)
+# why we need to broadcast? because we need to calculate the advantage values for each response within the group
 mean_grouped_rewards = mean_grouped_rewards.repeat_interleave(num_generations, dim=0)
 std_grouped_rewards = std_grouped_rewards.repeat_interleave(num_generations, dim=0)
-print("Broadcasted Mean:", mean_grouped_rewards)
-print("Broadcasted Std:", std_grouped_rewards)
 ```
 this will output:
 ```text
