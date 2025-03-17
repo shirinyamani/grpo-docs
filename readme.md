@@ -196,7 +196,7 @@ For reward_1 = [1, 0, 0, 1]:
 0 - 0.5 / 0.5774 ≈ -0.8660
 For reward_2 = [0, 0, 1, 1]: Same pattern.
 ```
-however, the shape here is (B * G,) = (8,) but in practice, we need to have the shape of (B, G) = (2, 4) to match the logits shape. Therefore, we need to unsqueeze the advantages tensor to have the shape of (B*G, 1) = (8, 1) to match the logits shape.
+however, the shape here is `(B*G,) = (8,)` but in practice, we need to have the shape of `(B, G) = (2, 4)` to match the logits shape, right? Therefore, we need to unsqueeze the advantages tensor to have the shape of `(B*G, 1) = (8, 1)` to match the logits shape.
 ```python
 #Shape (B * G, 1) = (8, 1) to match the logits shape
 advantages = advantages.unsqueeze(1)  
