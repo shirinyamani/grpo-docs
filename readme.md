@@ -123,7 +123,7 @@ batch_size, num_generations = 2, 4
 outputs = model.generate(
     input_ids=input_ids,  # Shape: (1, prompt_len)
     attention_mask=attention_mask,
-    max_new_tokens=1,  # L = 1 (single token per response)
+    max_new_tokens=1,  # seq_len = 1 (single token per response)
     num_return_sequences=batch_size * num_generations,  # 8 responses total
     do_sample=True,
     top_k=10,
