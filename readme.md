@@ -272,7 +272,7 @@ model_config = ModelConfig(
 
 # Hyperparameters
 training_args = GRPOConfig(
-    output_dir="qwen-r1-aha-moment",
+    output_dir="qwen-r1-tiny",
     learning_rate=5e-7,
     lr_scheduler_type="cosine",
     logging_steps=10,
@@ -284,9 +284,9 @@ training_args = GRPOConfig(
     bf16=True,
     # GRPO specific parameters
     max_prompt_length=256,
-    max_completion_length=1024, # max length of the generated output for our solution
-    num_generations=2,
-    beta=0.001,
+    max_completion_length=1024, # max length of the generated output 
+    num_generations=2, # the minimum is two, CANNOT be less than 2 (non-sense for averaging)
+    beta=0.001, # was 0.04 in the original paper
     
 )
 trainer = GRPOTrainer(
@@ -297,5 +297,9 @@ trainer = GRPOTrainer(
     eval_dataset=test_dataset,
     peft_config=get_peft_config(model_config),
 )
+trainer.train()
+```
+
+As you see in the above training argument the `reward_funcs=[simple_math_reward_func, math_reward_func]` though we also have a `code_reward_func` but we are not using it in this training cause for instance the dataset we picked for training does not have code samples prompts. But this will not cause any crash or error, the code will run smoothly. 😎
 
 
