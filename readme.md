@@ -98,7 +98,7 @@ $$\text{Ratio}: \frac{0.7}{0.5} = 1.4  →\text{after Clip}\space1.2 \space (\ep
 - Then when the target function is re-weighted, the model tends to reinforce the generation of correct output, and the $\text{KL Divergence}$  limits the deviation from the reference policy. 
 
 # 💻 Complete psudue code example 
-## **1. Load the Model and Tokenizer and get some generation from the model for given prompt/question**
+## 1. Load the Model and get some generation from the model for given prompt/question
 ```python
 import torch
 import torch.nn.functional as F
@@ -188,14 +188,15 @@ advantages = (rewards - mean_grouped_rewards) / (std_grouped_rewards + 1e-8)
 this will output:
 ```text
 Advantages: tensor([ 0.8659, -0.8660, -0.8660,  0.8659, -0.8660, -0.8660,  0.8659,  0.8659])
-
-which is coming from the formula:
+```
+which is coming from the Advantage formula above, so:
+```text
 For reward_1 = [1, 0, 0, 1]:
 1 - 0.5 / 0.5774 ≈ 0.8659
 0 - 0.5 / 0.5774 ≈ -0.8660
 For reward_2 = [0, 0, 1, 1]: Same pattern.
 ```
-however, the shape here is (B*G,) = (8,) but in practice, we need to have the shape of (B, G) = (2, 4) to match the logits shape. Therefore, we need to unsqueeze the advantages tensor to have the shape of (B*G, 1) = (8, 1) to match the logits shape.
+however, the shape here is (B * G,) = (8,) but in practice, we need to have the shape of (B, G) = (2, 4) to match the logits shape. Therefore, we need to unsqueeze the advantages tensor to have the shape of (B*G, 1) = (8, 1) to match the logits shape.
 ```python
 #Shape (B * G, 1) = (8, 1) to match the logits shape
 advantages = advantages.unsqueeze(1)  
