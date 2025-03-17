@@ -319,22 +319,22 @@ def reward_func(completions, **kwargs):
 	avg_length = sum(len(c) for c in completions) / len(completions) if completions else 1
 	return [float(len(c) / avg_length) for c in completions]
 
-	training_args = GRPOConfig(
-		output_dir=tmp_dir,
-		learning_rate=0.1,  # increase the learning rate to speed up the test
-		per_device_train_batch_size=3,  # reduce the batch size to reduce memory usage
-		num_generations=3,  # reduce the number of generations to reduce memory usage
-		max_completion_length=32,  # reduce the completion length to reduce memory usage
-		report_to="none",
+training_args = GRPOConfig(
+	output_dir=tmp_dir,
+	learning_rate=0.1,  # increase the learning rate to speed up the test
+	per_device_train_batch_size=3,  # reduce the batch size to reduce memory usage
+	num_generations=3,  # reduce the number of generations to reduce memory usage
+	max_completion_length=32,  # reduce the completion length to reduce memory usage
+	report_to="none",
 	)
-	trainer = GRPOTrainer(
-		model="trl-internal-testing/tiny-Qwen2ForCausalLM-2.5",
-		reward_funcs=[reward_func, "trl-internal-testing/tiny-Qwen2ForSequenceClassification-2.5"],
-		args=training_args,
-		train_dataset=dataset,
+trainer = GRPOTrainer(
+	model="trl-internal-testing/tiny-Qwen2ForCausalLM-2.5",
+	reward_funcs=[reward_func, "trl-internal-testing/tiny-Qwen2ForSequenceClassification-2.5"],
+	args=training_args,
+	train_dataset=dataset,
 	)
 
-	trainer.train()
+trainer.train()
 ```
 
 As you see here we have a mix of reward functions and reward models, the `reward_func` is a simple rule-based reward function that rewards longer completions, while the second reward model is a pre-trained model that assigns rewards based on the correctness of the response. This flexibility allows the user to choose the most suitable reward model for their specific task.
