@@ -100,8 +100,8 @@ $$\text{Ratio}: \frac{0.7}{0.5} = 1.4  →\text{after Clip}\space1.2 \space (\ep
 # 💻 Complere Code Example
 As discussed above, the GRPO algorithm involves three main steps:
 1. Group Sampling: Generate multiple responses for each question. Then evaluate the responses based on the reward model (reward scoring).
-	-  This reward model can be:
-		- A Simple rule-based reward model that assigns rewards based on the correctness of the response.
+	-  This reward model/function can be:
+		- A Simple rule-based reward func that assigns rewards based on the correctness of the response.
 		- An NN-based network reward model that can be trained to assign rewards based on the correctness of the response.
 2. Advantage Calculation: Calculate the advantage value for each response.
 3. Policy Update: Update the policy model based on the advantage values.
