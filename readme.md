@@ -306,7 +306,7 @@ trainer.train()
 
 As you see in the above training argument the `reward_funcs=[simple_math_reward_func, math_reward_func]` though we also have a `code_reward_func` but we are not using it in this training cause for instance the dataset we picked for training does not have code samples prompts. But this will not cause any crash or error, the code will run smoothly. 😎
 
-# 🔥 Example of Mixed rule-based reward model
+# 🔥 Example of Multiple Mixed reward functions
 
 ```python
 # GRPO trainer can handle a mix of reward functions and reward models in the same training run
