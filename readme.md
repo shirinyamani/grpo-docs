@@ -133,6 +133,17 @@ outputs = model.generate(
     output_scores=True
 )
 ```
+this initial Generation (Before Any Steps) will output sth like this:
+```text
+Output 1: 5.0
+Output 2: 6.0
+Output 3: 7.0
+Output 4: 5.0
+Output 5: 10.0
+Output 6: 2.0
+Output 7: 5.0
+Output 8: 5.0
+```
 ### Step 2) Calculate the Reward for each of the generated outputs
 With GRPO, with the same sample prompt, we generate multiple completions. So for instance, for our prompt of `"Solve y = 2x + 1 for x = 2, y = "` we have two group of generated outputs for the given prompt one is say 
 - `[5, 6, 7, 5]` and the other is 
