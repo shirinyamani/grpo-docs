@@ -212,7 +212,7 @@ def code_reward_func(completions, **kwargs):
 ```
 Note: `<think>` is synthetically added to each of the prompt by us as discussed in the original deepseek papar. 
 
-ADD THE PICTURE OF THE PAPER 
+[img](./img/1.png)
 
 We can simply test the above functions by;
 ```python
