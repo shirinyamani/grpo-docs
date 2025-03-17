@@ -3,12 +3,16 @@
 GRPO directly evaluates the model-generated responses by comparing them within groups of generation to optimize policy model, instead of training a seperate value model (Critic). This approach leads to significant reduction in computational cost!
 
 ### 📱**Application**: 
-Mostly in verifiable domains like Math reasoning or/and code generation that requires clear reward rules cause the original deepseek-r1 model that uses grpo, has a set of rule-based reward scenario where there are defined rules for the desired output (e.g. in case of math, there is clear correct answer). 
+GRPO can basically be applied to any verifiable task where the correctness of the response can be determined. For instance, in math reasoning, the correctness of the response can be easily verified by comparing it to the ground truth. 
+
+Below is the picture of the GRPO algorithm in a nutshell:
+
+![deep](./img/2.jpg)
 
 # Steps of GRPO
 ## 🐾 Step 1) **Group Sampling**:
 ### **Action:** 
-For each question $q$, the model will generate $G$ outputs (group size) from the old policy model:{ ${o_1, o_2, o_3, \dots, o_G}\pi_{\theta_{\text{old}}}$ }, $G=8$ where each $o_i$ represents one completion from the model.
+For each question $q$, the model will generate $G$ outputs (group size) from the trained policy:{ ${o_1, o_2, o_3, \dots, o_G}\pi_{\theta_{\text{old}}}$ }, $G=8$ where each $o_i$ represents one completion from the model.
 ### **Example**:
 - **Question** 
 	- $q$ : $\text{Calculate}\space2 + 2 \times 6$
@@ -51,14 +55,12 @@ Limit the ratio discussed above to be within $[1 - \epsilon, 1 + \epsilon]$ to a
 - Therefore, intuitively, By incorporating the probability ratio, the objective function ensures that updates to the policy are proportional to the advantage $A_i$ while being moderated to prevent drastic changes. T
 
 ## **3. 🚩 KL Divergence:**  $\beta D_{KL}(\pi_{\theta} || \pi_{ref})$
-KL Divergence is used to prevent over-optimization of the reward model, which in this context is refers to when the model output non-sensical text or in our math reasoning example, the model will generate extremely incorrect answers!
-### **Example**
-Suppose the reward model has a flaw—it **wrongly assigns higher rewards to incorrect outputs** due to spurious correlations in the training data. So,  $2 + 2 \times 6 = 20$ then later the Ratio $R(o_6​=20)=0.95$ *(wrong but rewarded highly)*, without KL Divergence, during optimization, the model will learn to favours responses that are higher numbers, assuming they indicate *"more confident"* reasoning, i.e. the model starts shifting its policy towards these outputs. And future iterations reinforce these incorrect answers. So, say  $2 + 2 \times 6 = 42 \space \text{(a random common number in datasets)}$. This response doesn't even resemble arithmetic errors anymore. Instead, the model has learned to exploit whatever patterns maximize the reward signal, regardless of correctness. 
+In the KL divergence term, the $\pi_{ref}$ is basically the pre-update model’s output, `per_token_logps` and $\pi_{\theta}$ is the new model’s output, `new_per_token_logps`. Theoretically, KL divergence is minimized to prevent the model from deviating too far from its original behavior during optimization. This helps strike a balance between improving performance based on the reward signal and maintaining coherence. In this context, minimizing KL divergence reduces the risk of the model generating nonsensical text or, in the case of mathematical reasoning, producing extremely incorrect answers.
+
 ### **Meaning**
 - A KL divergence penalty keeps the model’s outputs close to its original distribution, preventing extreme shifts.
-- Even if incorrect answers receive high rewards, the model cannot deviate too much from what it originally considered reasonable.
 - Instead of drifting towards completely irrational outputs, the model would refine its understanding while still allowing some exploration
--  The 
+
 ### **Math Definition**
 Recall that KL distance is defined as follows:
 $$D_{KL}(P || Q) = \sum_{x \in X} P(x) \log \frac{P(x)}{Q(x)}$$
@@ -72,10 +74,6 @@ In RLHF, the two distributions of interest are often the distribution of the new
     - Faster adaptation but risk of instability: The model might learn reward-hacking behaviors.
 	- Over-optimization risk: If the reward model is flawed, the policy might generate nonsensical outputs.
 - **Original** [DeepSeekMath](https://arxiv.org/abs/2402.03300) paper set this $\beta= 0.04$
-
-Below is the picture of the GRPO algorithm in a nutshell:
-
-![deep](./img/2.jpg)
 
 # 🧮 Complete Simple Math Example
 ## **Question** 
@@ -97,8 +95,8 @@ $$mean(r_i) = 0.5$$
 $$\text{Ratio}: \frac{0.7}{0.5} = 1.4  →\text{after Clip}\space1.2 \space (\epsilon = 0.2)$$
 - Then when the target function is re-weighted, the model tends to reinforce the generation of correct output, and the $\text{KL Divergence}$  limits the deviation from the reference policy. 
 
-# 💻 Complete psudue code example 
-## 1. Load the Model and get some generation from the model for given prompt/question
+# 💻 Complete pseudo code example 
+### 1. Load the Model and get some generation from the model for given prompt/question
 ```python
 import torch
 import torch.nn.functional as F
@@ -241,7 +239,7 @@ per_token_loss = pg_loss_max + self.beta * per_token_kl
 per_token_kl = F.kl_div(F.log_softmax(new_per_token_logps, dim=-1), F.softmax(per_token_logps, dim=-1), reduction="none").sum(dim=-1, keepdim=True)  
 ```
 
-complete example can be found [here](./basic_example.py).
- 
+Complete example can be found [here](./basic_example.py). GRPO is also implemented by the excellent TRL team, you can check the implementation [TRL/GRPO_trainer](https://github.com/huggingface/trl/blob/main/trl/trainer/grpo_trainer.py) for more details.
+
 Happy training! 🚀
 
