@@ -117,24 +117,23 @@ model.to(device)
 # Input prompt
 prompt = "Solve y = 2x + 1 for x = 2, y = "  # Correct answer: 5
 inputs = tokenizer(prompt, return_tensors="pt", padding=True)
-input_ids = inputs["input_ids"].to(device)
+input_ids = inputs["input_ids"].to(device)  # Shape: (1, prompt_len)
 attention_mask = inputs["attention_mask"].to(device)
 
-# Generate 4 outputs
+# Step 1: Generate 8 responses (B = 2 groups, G = 4 responses per group)
+batch_size, num_generations = 2, 4
 outputs = model.generate(
-    input_ids, 
-    attention_mask=attention_mask,  # Include attention mask
-    max_length=1, 
-    num_return_sequences=2,  # Generates 2 different completions
+    input_ids=input_ids,  # Shape: (1, prompt_len)
+    attention_mask=attention_mask,
+    max_new_tokens=1,  # L = 1 (single token per response)
+    num_return_sequences=batch_size * num_generations,  # 8 responses total
     do_sample=True,
-	max_new_tokens=5, 
-	return_dict_in_generate=True,
-	output_scores=True
+    top_k=10,
+    temperature=0.7,
+    pad_token_id=tokenizer.eos_token_id,
+    return_dict_in_generate=True,
+    output_scores=True
 )
-
-# Decode and print outputs
-for i, output in enumerate(outputs):
-    print(f"Generation {i+1}: {tokenizer.decode(output, skip_special_tokens=True)}")
 ```
 this should output something like this:
 ```text
@@ -242,4 +241,7 @@ per_token_loss = pg_loss_max + self.beta * per_token_kl
 per_token_kl = F.kl_div(F.log_softmax(new_per_token_logps, dim=-1), F.softmax(per_token_logps, dim=-1), reduction="none").sum(dim=-1, keepdim=True)  
 ```
 
+complete example can be found [here](./basic_example.py).
+ 
+Happy training! 🚀
 
